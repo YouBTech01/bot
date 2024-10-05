@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Summary Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.3/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .retro-theme {
+            background-color: #fdf6e3;
+            color: #002b36;
+        }
+        .button-retro {
+            background-color: #859900;
+            color: #fdf6e3;
+        }
+    </style>
+</head>
+<body class="retro-theme">
+    <div class="max-w-xl mx-auto py-10 px-4">
+        <form id="uploadForm" class="space-y-6">
+            <div>
+                <label for="pdfFile" class="block text-sm font-medium text-gray-700">Upload PDF File:</label>
+                <input type="file" id="pdfFile" name="pdfFile" class="mt-1 p-2 block w-full border-gray-300 shadow-sm" accept="application/pdf" required>
+            </div>
+            <button type="button" id="submitBtn" class="button-retro p-2 w-full text-sm uppercase font-bold">Let's Summarize That PDF!</button>
+        </form>
+        <section id="output" class="mt-10 py-4 px-2 text-sm bg-white shadow rounded">
+            <p>Response will appear here...</p>
+        </section>
+    </div>
+    <footer class="max-w-xl mx-auto text-center py-4">
+        <a href="#" class="text-blue-500 hover:underline">Made with ❤️</a>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
+    <script>
+        document.getElementById('submitBtn').addEventListener('click', function () {
+            // Prompt for PDF summarization
+            const substitutedPrompt = "Generate a concise summary of the PDF file using natural language processing.";
+            
+            // Create a new WebSocket instance
+            const ws = new WebSocket('wss://backend.buildpicoapps.com/ask_ai_streaming_v2');
+            const output = document.getElementById('output');
+            
+            // Function to read the first page of the PDF and send its text content
+            async function sendPdfText() {
+                const fileInput = document.getElementById("pdfFile");
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    alert("Please upload a PDF file");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = async function (event) {
+                    const pdfData = new Uint8Array(event.target.result);
+                    const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+                    
+                    const numPages = pdf.numPages;
+                    const pagePromises = [];
+                    
+                    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                        const page = await pdf.getPage(pageNum);
+                        const content = await page.getTextContent();
+                        const textArray = content.items.map(item => item.str);
+                        const text = textArray.join(" ");
+                        pagePromises.push(text);
+                    }
+
+                    // Join all page texts together
+                    const allPagesText = await Promise.all(pagePromises);
+                    const pdfText = allPagesText.join("\n\n");
+
+                    // Send the text and the prompt through WebSocket
+                    ws.send(
+                        JSON.stringify({
+                            appId: "friend-plant",
+                            prompt: `${substitutedPrompt}\n\n${pdfText}`,
+                        })
+                    );
+                };
+
+                reader.readAsArrayBuffer(file);
+            }
+
+            // Handle WebSocket open event
+            ws.addEventListener("open", () => {
+                sendPdfText();
+            });
+
+            // Handle WebSocket message event
+            ws.addEventListener("message", (event) => {
+                console.log(event.data);
+                output.innerText += event.data;
+            });
+
+            // Handle WebSocket close event
+            ws.addEventListener("close", (event) => {
+                console.log("Connection closed", event.code, event.reason);
+                if (event.code !== 1000) {
+                    alert("Oops, we ran into an error. Refresh the page and try again.");
+                }
+            });
+
+            // Handle WebSocket error event
+            ws.addEventListener("error", (error) => {
+                console.log('WebSocket error', error);
+                alert("Oops, we ran into an error. Refresh the page and try again.");
+            });
+
+            // Clear the output section on each new request
+            output.innerText = '';
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Summarize PDF documents quickly and efficiently using our PDF Summary Generator tool.">
+    <meta name="keywords" content="PDF summary, PDF summarizer, PDF tool, document summarization">
+    <meta name="author" content="Your Name or Company">
+    <meta property="og:title" content="PDF Summary Generator | Quick and Efficient Summarization Tool">
+    <meta property="og:description" content="Summarize PDF files in seconds with our easy-to-use PDF summarizer tool.">
+    <meta property="og:image" content="link_to_image.png">
+    <meta property="og:url" content="https://www.yourwebsite.com">
+    <meta property="og:type" content="website">
+    <title>PDF Summary Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.3/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Color Scheme */
+        :root {
+            --primary-color: #008080; /* Teal */
+            --secondary-color: #002b5b; /* Navy Blue */
+            --background-color: #f8f8f8; /* Soft White */
+            --text-color: #2c3e50; /* Dark Text */
+            --button-color: #00aaff; /* Light Blue for Buttons */
+            --dark-mode-bg: #1a202c;
+            --dark-mode-text: #edf2f7;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .dark-mode {
+            background-color: var(--dark-mode-bg);
+            color: var(--dark-mode-text);
+        }
+        .header, .footer {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        .button-retro {
+            background-color: var(--primary-color);
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .button-retro:hover {
+            background-color: var(--button-color);
+        }
+        .input-field {
+            border: 1px solid var(--primary-color);
+            border-radius: 5px;
+        }
+        .rounded-shadow {
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header py-4 px-6 text-white">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">PDF Summary Generator</h1>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="#about" class="hover:text-gray-300">About</a></li>
+                    <li><a href="#tool" class="hover:text-gray-300">Tool</a></li>
+                    <li><a href="#feedback" class="hover:text-gray-300">Feedback</a></li>
+                    <li><a href="#contact" class="hover:text-gray-300">Contact</a></li>
+                    <li>
+                        <!-- Dark Mode Toggle -->
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="darkModeToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- About Section -->
+    <section id="about" class="py-12 px-4 text-center bg-white text-gray-800 rounded-shadow">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-2xl font-semibold">About PDF Summary Generator</h2>
+            <p class="mt-4 text-sm">Our PDF Summary Generator allows you to quickly and efficiently summarize your PDF documents. Whether you have long research papers, reports, or e-books, our tool will extract the key points and present a concise summary for your convenience. Get started by uploading your PDF and let the tool do the rest!</p>
+        </div>
+    </section>
+
+    <!-- PDF Summary Tool Section -->
+    <section id="tool" class="py-12 px-4">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-2xl font-semibold text-center">Summarize Your PDF</h2>
+            <div class="mt-6 max-w-xl mx-auto bg-gray-100 p-6 rounded-shadow">
+                <form id="uploadForm" class="space-y-6">
+                    <div>
+                        <label for="pdfFile" class="block text-sm font-medium text-gray-700">Upload PDF File:</label>
+                        <input type="file" id="pdfFile" name="pdfFile" class="mt-1 p-2 block w-full border-gray-300 shadow-sm input-field" accept="application/pdf" required>
+                    </div>
+                    <button type="button" id="submitBtn" class="button-retro p-2 w-full text-sm uppercase font-bold">Let's Summarize That PDF! <i class="bi bi-file-earmark-text"></i></button>
+                </form>
+                <div id="loader" class="hidden mt-6 text-center">
+                    <div class="loader"></div>
+                    <p>Summarizing the PDF, please wait...</p>
+                </div>
+                <section id="output" class="mt-10 py-4 px-2 text-sm bg-white shadow rounded">
+                    <p>Response will appear here...</p>
+                </section>
+                <div class="mt-4 flex justify-between items-center">
+                    <div id="wordCount" class="text-sm font-medium">Word Count: 0 | Character Count: 0</div>
+                    <div class="space-x-4">
+                        <button id="clearOutput" class="button-retro py-1 px-4"><i class="bi bi-x-circle"></i> Clear Output</button>
+                        <button id="downloadSummary" class="button-retro py-1 px-4"><i class="bi bi-download"></i> Download Summary</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feedback Section -->
+    <section id="feedback" class="py-12 px-4 bg-gray-800 text-white rounded-shadow">
+        <div class="max-w-6xl mx-auto text-center">
+            <h2 class="text-2xl font-semibold">Feedback</h2>
+            <p class="mt-4 text-sm">We value your feedback! Please let us know your thoughts, suggestions, or report any issues you encounter.</p>
+            <form id="feedbackForm" class="mt-6 space-y-4">
+                <textarea id="feedbackInput" rows="4" class="w-full p-2 rounded input-field" placeholder="Your feedback"></textarea>
+                <button type="button" class="button-retro p-2 w-full text-sm uppercase font-bold">Submit Feedback</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-12 px-4 bg-white text-gray-800 rounded-shadow">
+        <div class="max-w-6xl mx-auto text-center">
+            <h2 class="text-2xl font-semibold">Contact Us</h2>
+            <p class="mt-4 text-sm">For any inquiries or support, feel free to contact us at <a href="mailto:support@yourwebsite.com" class="text-blue-500 underline">support@yourwebsite.com</a>.</p>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="footer py-4 px-6 text-center text-white">
+        <div class="max-w-6xl mx-auto">
+            <p>&copy; 2024 PDF Summary Generator. All rights reserved.</p>
+            <p>Follow us on <a href="#" class="text-blue-500 hover:underline">Twitter</a>, <a href="#" class="text-blue-500 hover:underline">LinkedIn</a>, and <a href="#" class="text-blue-500 hover:underline">GitHub</a>.</p>
+        </div>
+    </footer>
+
+    <!-- Script for Interactivity and PDF Summary -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
+    <script>
+        const output = document.getElementById('output');
+        const loader = document.getElementById('loader');
+        const wordCount = document.getElementById('wordCount');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            const ws = new WebSocket('wss://backend.buildpicoapps.com/ask_ai_streaming_v2');
+            
+            async function sendPdfText() {
+                const fileInput = document.getElementById("pdfFile");
+                const file = fileInput.files[0];
+                if (!file) {
+                    alert("Please upload a PDF file");
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = async function (event) {
+                    const pdfData = new Uint8Array(event.target.result);
+                    const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+                    const numPages = pdf.numPages;
+                    const pagePromises = [];
+                    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                        const page = await pdf.getPage(pageNum);
+                        const content = await page.getTextContent();
+                        const textArray = content.items.map(item => item.str);
+                        const text = textArray.join(" ");
+                        pagePromises.push(text);
+                    }
+                    const allPagesText = await Promise.all(pagePromises);
+                    const pdfText = allPagesText.join("\n\n");
+
+                    ws.send(JSON.stringify({ appId: "friend-plant", prompt: `Generate a concise summary of the PDF file using natural language processing.\n\n${pdfText}` }));
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            ws.addEventListener("open", () => {
+                sendPdfText();
+                loader.classList.remove('hidden');
+                output.innerText = ''; // Clear output before new request
+            });
+
+            ws.addEventListener("message", (event) => {
+                console.log(event.data);
+                output.innerText += event.data;
+                updateWordAndCharacterCount(event.data);
+            });
+
+            ws.addEventListener("close", () => {
+                loader.classList.add('hidden');
+            });
+
+            ws.addEventListener("error", () => {
+                loader.classList.add('hidden');
+                alert("An error occurred. Please try again.");
+            });
+        });
+
+        function updateWordAndCharacterCount(summaryText) {
+            const words = summaryText.trim().split(/\s+/).length;
+            const characters = summaryText.length;
+            wordCount.innerText = `Word Count: ${words} | Character Count: ${characters}`;
+        }
+
+        document.getElementById('clearOutput').addEventListener('click', () => {
+            output.innerText = '';
+            wordCount.innerText = 'Word Count: 0 | Character Count: 0';
+            document.getElementById('pdfFile').value = ''; // Clear file input
+        });
+
+        document.getElementById('downloadSummary').addEventListener('click', () => {
+            const summary = output.innerText.trim();
+            if (summary) {
+                const blob = new Blob([summary], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'PDF_Summary.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                alert('No summary available to download.');
+            }
+        });
+
+        // Dark Mode Toggle
+        darkModeToggle.addEventListener('change', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

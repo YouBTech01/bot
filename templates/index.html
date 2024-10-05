@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-top: 20px;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Admin Panel</h1>
+        <hr>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Search User</h5>
+                <div class="input-group mb-3">
+                    <input type="text" id="userId" placeholder="Enter User ID" class="form-control" />
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" onclick="getUserData()">
+                            <i class="fas fa-search"></i> Get User Data
+                        </button>
+                    </div>
+                </div>
+                <div id="userData" class="alert alert-info" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">All Users</h5>
+                <table class="table table-bordered table-striped">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>User ID</th>
+                            <th>Balance</th>
+                            <th>UPI</th>
+                            <th>Referrals</th>
+                            <th>Subscription Status</th>
+                            <th>Joining Time</th>
+                            <th>Online Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- User data will be inserted here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function getUserData() {
+            const userId = document.getElementById('userId').value;
+            const response = await fetch(`/user/${userId}`);
+            const data = await response.json();
+
+            if (data) {
+                document.getElementById('userData').innerHTML = `
+                    <strong>User ID:</strong> ${data.user_id}<br>
+                    <strong>Balance:</strong> ₹${data.balance}<br>
+                    <strong>UPI:</strong> ${data.upi || 'Not linked'}<br>
+                    <strong>Referrals:</strong> ${data.referrals}<br>
+                    <strong>Subscription Status:</strong> ${data.is_subscribed ? 'Subscribed' : 'Not Subscribed'}<br>
+                    <strong>Joining Time:</strong> ${data.joining_time}<br>
+                    <strong>Online Status:</strong> ${data.online_status}
+                `;
+                document.getElementById('userData').style.display = 'block';
+            } else {
+                alert('User not found.');
+            }
+        }
+
+        async function fetchAllUsers() {
+            const response = await fetch('/users');
+            const users = await response.json();
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';  // Clear existing table data
+            users.forEach(user => {
+                const row = `<tr>
+                    <td>${user[0]}</td>
+                    <td>₹${user[1]}</td>
+                    <td>${user[2] || 'Not linked'}</td>
+                    <td>${user[3]}</td>
+                    <td>${user[4] ? 'Subscribed' : 'Not Subscribed'}</td>
+                    <td>${user[5]}</td>
+                    <td>${user[6]}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Fetch all users when the page loads
+        window.onload = fetchAllUsers;
+    </script>
+</body>
+</html>
